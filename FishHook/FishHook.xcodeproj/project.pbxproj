@@ -15,6 +15,7 @@
 		0D9A3B6321665AD9006E47CC /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 0D9A3B6221665AD9006E47CC /* main.m */; };
 		0D9A3B6B21666144006E47CC /* fishhook.c in Sources */ = {isa = PBXBuildFile; fileRef = 0D9A3B6A21666144006E47CC /* fishhook.c */; };
 		0D9A3B6E21666178006E47CC /* YDCrashProtector.m in Sources */ = {isa = PBXBuildFile; fileRef = 0D9A3B6C21666178006E47CC /* YDCrashProtector.m */; };
+		0D9A3B71216C3EFB006E47CC /* YDMemWriter.m in Sources */ = {isa = PBXBuildFile; fileRef = 0D9A3B70216C3EFB006E47CC /* YDMemWriter.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -32,6 +33,8 @@
 		0D9A3B6A21666144006E47CC /* fishhook.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = fishhook.c; path = ../../fishhook.c; sourceTree = "<group>"; };
 		0D9A3B6C21666178006E47CC /* YDCrashProtector.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = YDCrashProtector.m; sourceTree = "<group>"; };
 		0D9A3B6D21666178006E47CC /* YDCrashProtector.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = YDCrashProtector.h; sourceTree = "<group>"; };
+		0D9A3B6F216C3EFB006E47CC /* YDMemWriter.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = YDMemWriter.h; sourceTree = "<group>"; };
+		0D9A3B70216C3EFB006E47CC /* YDMemWriter.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = YDMemWriter.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -77,6 +80,8 @@
 				0D9A3B5E21665AD9006E47CC /* LaunchScreen.storyboard */,
 				0D9A3B6121665AD9006E47CC /* Info.plist */,
 				0D9A3B6221665AD9006E47CC /* main.m */,
+				0D9A3B6F216C3EFB006E47CC /* YDMemWriter.h */,
+				0D9A3B70216C3EFB006E47CC /* YDMemWriter.m */,
 			);
 			path = FishHook;
 			sourceTree = "<group>";
@@ -154,6 +159,7 @@
 				0D9A3B5821665AD7006E47CC /* ViewController.m in Sources */,
 				0D9A3B6E21666178006E47CC /* YDCrashProtector.m in Sources */,
 				0D9A3B6321665AD9006E47CC /* main.m in Sources */,
+				0D9A3B71216C3EFB006E47CC /* YDMemWriter.m in Sources */,
 				0D9A3B6B21666144006E47CC /* fishhook.c in Sources */,
 				0D9A3B5521665AD7006E47CC /* AppDelegate.m in Sources */,
 			);

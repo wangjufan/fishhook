@@ -27,14 +27,24 @@
 #import <objc/runtime.h>
 //#include <unordered_map>
 
-#   define ISMASK_FREE_COUNT   0xff000000U
+#define MASK_Pro_One   0xaaaaaaaaU
+#define MASK_Pro_Two   0x33333333U
+#define MASK_Pro_Three   0xff00ff00U
+//#define MASK_Pro_Head   0x40ffffffU
 #define  kYDCrashProtector_Count  2
-inline unsigned mfDlt() {
-    return WORD_BIT/8;
+unsigned mfDlt() {
+    return 16; //WORD_BIT/8;//stat info
 }
-inline bool isProtector(unsigned *p) {
-    unsigned value = (*p & ISMASK_FREE_COUNT);
-    return 0 == value;
+void setProtector(unsigned int *p) {
+    *(p-1) = MASK_Pro_One;
+    *(p-2) = MASK_Pro_Two;
+}
+bool isProtector(unsigned int *p) {
+    unsigned int *one = p-1;
+    unsigned int *two = p-2;
+    bool flag = (MASK_Pro_One == *one &&
+                 MASK_Pro_Two == *two);
+    return flag;
 }
 typedef struct{
     void* isa;
@@ -84,11 +94,6 @@ const char *getImageName() {
     return name;
 }
 
-static void (*origFree)(void *);
-static void newFree(void *ptr) {
-    if (!ptr) {
-        return;
-    }
 //    static dispatch_once_t onceToken;
 //    static void * protector = nil;
 //    dispatch_once(&onceToken, ^{
@@ -101,106 +106,120 @@ static void newFree(void *ptr) {
 //        [pro description];
 //    }else{
 //    }
+static void (*origFree)(void *);        //finished
+static void newFree(void *ptr) {
+    if (!ptr) {
+        return;
+    }
     if (isProtector(ptr)) {
         void *rprt = ptr - mfDlt();
-        int *count = rprt;
-        int cvalue = *count;
-        if (cvalue == 1) {
-            *count = 0;
-            origFree(rprt);
-        }else {
-            return;
-        }
+        printf("\nwjf freem p %p;", rprt );
+        origFree(rprt);
     }else {
-        
+        origFree(ptr);
+        printf("\nwjf free %p;", ptr );
     }
 }
 
-static void* (*origMalloc)(size_t);
+static void* (*origMalloc)(size_t);     //finished
 static void *newMalloc(size_t size) {
     void *ptr = origMalloc(size + mfDlt());
     memset(ptr, 0, size + mfDlt());
-    int *count = ptr;
-    *count = 1;
-    int cvalue = *count;
-    void *rprt = ptr + mfDlt();
-    return rprt;
+    void *p = ptr+mfDlt();
+    setProtector(p);
+    printf("\nwjf malloc %p;", ptr );
+    return ptr + mfDlt();
 }
+
+static void* (*origCalloc)(size_t __count, size_t __size);
+static void *newCalloc(size_t __count, size_t __size) {
+    void * ptr = origCalloc(__count, __size);
+    printf("\n wjf calloc %p;", ptr );
+    return ptr;
+}
+
+//The obsolete function valloc() allocates size bytes
+//and returns a pointer to the allocated memory.
+//The memory address will be a multiple of the page size.
+//It is equivalent to memalign(sysconf(_SC_PAGESIZE),size).
+//static void* (*origValloc)(size_t __size);
+//static void *newValloc(size_t __size) {
+//    void *ptr = origValloc(__size + mfDlt());
+//    valloc(<#size_t#>)
+//    memset(ptr, 0, __size + mfDlt());
+//    int *count = ptr;
+//    *count = 1;
+//    int cvalue = *count;
+//    void *rprt = ptr + mfDlt();
+//    return rprt;
+//}
+
+#pragma mark -- re-alloc
 
 static void* (*origRealloc)(void *__ptr, size_t __size);
 static void *newRealloc(void *__ptr, size_t __size) {
-    __ptr -= mfDlt();
-    void *ptr = origRealloc(__ptr, __size + mfDlt());
-    memset(ptr, 0, __size+mfDlt());
-    int *count = ptr;
-    *count = 1;
-    int cvalue = *count;
-    void *rprt = ptr + mfDlt();
-    return rprt;
-}
-
-static void* (*origCalloc)(void *__ptr, size_t __size);
-static void *newCalloc(void *__ptr, size_t __size) {
-    unsigned long addr = __ptr;
-    void * mptr = __ptr - mfDlt();
-    void *ptr = origCalloc(mptr, __size + mfDlt());
-    memset(ptr, 0, __size + mfDlt());
-    int *count = ptr;
-    *count = 1;
-    int cvalue = *count;
-    void *rprt = ptr + mfDlt();
-    return rprt;
+    if (!__ptr) {
+        return malloc(__size);
+    }
+    if (isProtector(__ptr)) {
+        size_t size = __size + mfDlt();
+        void * lp = __ptr - mfDlt();
+        void *ptr = origRealloc(lp, size);
+        if (!ptr) {
+            return NULL;
+        }
+        ptr += mfDlt();
+        return ptr;
+    }else {
+        void *ptr = origRealloc(__ptr, __size);
+        return ptr;
+    }
 }
 
 static void* (*origReallocf)(void *__ptr, size_t __size);
 static void *newReallocf(void *__ptr, size_t __size) {
-    __ptr -= mfDlt();
-    void *ptr = origReallocf(__ptr, __size + mfDlt());
-    memset(ptr, 0, __size + mfDlt());
-    int *count = ptr;
-    *count = 1;
-    int cvalue = *count;
-    void *rprt = ptr + mfDlt();
-    return rprt;
+    if (!__ptr) {
+        return malloc(__size);
+    }
+    if (isProtector(__ptr)) {
+        size_t size = __size + mfDlt();
+        void * lp = __ptr - mfDlt();
+        void *ptr = origReallocf(lp, size);
+        if (!ptr) {
+            return NULL;
+        }
+        ptr += mfDlt();
+        return ptr;
+    } else {
+        return origReallocf(__ptr, __size);
+    }
 }
 
-static void* (*origValloc)(size_t __size);
-static void *newValloc(size_t __size) {
-    void *ptr = origValloc(__size + mfDlt());
-    memset(ptr, 0, __size + mfDlt());
-    int *count = ptr;
-    *count = 1;
-    int cvalue = *count;
-    void *rprt = ptr + mfDlt();
-    return rprt;
+static void * (*orig_memset)(void *b, int c, size_t len);
+static void * new_memset(void *b, int c, size_t len) {
+    return orig_memset(b, c, len);
 }
-
-//void    *malloc(size_t __size)
-//void    *realloc(void *__ptr, size_t __size)
-//void    *calloc(size_t __count, size_t __size)
-//void    *reallocf(void *__ptr, size_t __size)
-//void    *valloc(size_t)
-
-__attribute__((constructor)) static void crashProtectorHook() {
+//__attribute__((constructor)) static
+void crashProtectorHook() {
 //     static dispatch_once_t onceTokenMalloc;
 //     dispatch_once(&onceTokenMalloc, ^{
 //    malloc_zone_malloc(<#malloc_zone_t *zone#>, <#size_t size#>)
-         origFree = dlsym(RTLD_DEFAULT, "free");
-         origMalloc = dlsym(RTLD_DEFAULT, "malloc");
-         origRealloc = dlsym(RTLD_DEFAULT, "realloc");
-         origCalloc = dlsym(RTLD_DEFAULT, "calloc");
-         origReallocf = dlsym(RTLD_DEFAULT, "reallocf");
-         origValloc = dlsym(RTLD_DEFAULT, "valloc");
+    origFree = dlsym(RTLD_DEFAULT, "free");
+    origMalloc = dlsym(RTLD_DEFAULT, "malloc");
+    origCalloc = dlsym(RTLD_DEFAULT, "calloc");
+    origRealloc = dlsym(RTLD_DEFAULT, "realloc");
+    origReallocf = dlsym(RTLD_DEFAULT, "reallocf");
+    
          struct rebinding rebindings[] = {
              {"free", newFree, NULL},
              {"malloc", newMalloc, NULL},
-             {"realloc", newRealloc, NULL},
              {"calloc", newCalloc, NULL},
+             {"realloc", newRealloc, NULL},
              {"reallocf", newReallocf, NULL},
-             {"valloc", newValloc, NULL},
          };
+    
          bool flag = rebind_symbols(rebindings,
-                                    sizeof(rebindings)/sizeof(rebindings[0]));
+                sizeof(rebindings)/sizeof(rebindings[0]));
          if (flag) {
              NSLog(@"failed !!!");
          }
